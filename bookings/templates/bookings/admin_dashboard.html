@@ -1,114 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Serenity Spa – Admin Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Salford & Co. — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-  :root {
-    --gold:#C9A84C; --gold-light:#E8D5A3; --gold-dark:#8B6914;
-    --deep:#0D0D1A; --mid:#141428; --surface:#1C1C35; --surface2:#252545;
-    --text:#F0EAD6; --text-muted:#9B9088;
-    --success:#6DBF8A; --error:#E07070;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--deep); color: var(--text); font-family: 'Jost', sans-serif; font-weight: 300; }
+:root{
+  --cream:#F5EFE0;--beige:#EDE3CF;--taupe:#8B7355;--taupe-dark:#5C4A32;
+  --dark:#2C2416;--white:#FFFDF8;--accent:#C8B89A;
+  --text:#3A2E1E;--muted:#9B8B78;--green:#5A8A6A;--err:#C0392B;
+  --chart1:#8B7355;--chart2:#C8B89A;--chart3:#5C4A32;
+}
+body.dark{
+  --cream:#1A1510;--beige:#231D16;--taupe:#A08060;--taupe-dark:#C8A878;
+  --dark:#F5EFE0;--white:#201A13;--accent:#6B5540;
+  --text:#E8DDD0;--muted:#7A6B5A;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--cream);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh}
 
-  .topbar {
-    background: var(--surface); border-bottom: 1px solid rgba(201,168,76,.2);
-    padding: 18px 32px; display: flex; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; z-index: 10;
-  }
-  .topbar h1 {
-    font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 400;
-    color: var(--gold-light); letter-spacing: .08em;
-  }
-  .topbar-actions { display: flex; gap: 12px; align-items: center; }
+/* ── TOP BAR ── */
+.topbar{
+  background:var(--dark);padding:0 28px;height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:20;
+  box-shadow:0 2px 16px rgba(0,0,0,.25);
+}
+.topbar-brand{
+  font-family:'Playfair Display',serif;font-size:1.15rem;
+  font-weight:400;color:var(--accent);letter-spacing:.06em;
+}
+.topbar-actions{display:flex;gap:10px;align-items:center}
+.btn{
+  padding:8px 18px;border-radius:6px;
+  font-family:'DM Sans',sans-serif;font-size:.76rem;
+  letter-spacing:.15em;text-transform:uppercase;font-weight:500;
+  cursor:pointer;text-decoration:none;transition:all .22s;
+  display:inline-flex;align-items:center;gap:6px;border:none;
+}
+.btn-gold{background:var(--accent);color:var(--dark)}
+.btn-gold:hover{background:var(--beige)}
+.btn-outline{background:transparent;border:1.5px solid rgba(200,184,154,.35);color:var(--accent)}
+.btn-outline:hover{background:rgba(200,184,154,.1)}
+.dm-btn{
+  background:rgba(200,184,154,.12);border:1px solid rgba(200,184,154,.25);
+  color:var(--accent);padding:7px 14px;border-radius:50px;
+  font-size:.76rem;letter-spacing:.1em;cursor:pointer;font-family:'DM Sans',sans-serif;
+  transition:all .22s;
+}
+.dm-btn:hover{background:rgba(200,184,154,.2)}
 
-  .btn {
-    padding: 9px 22px; border-radius: 8px; font-family: 'Jost', sans-serif;
-    font-size: .82rem; letter-spacing: .15em; text-transform: uppercase;
-    font-weight: 500; cursor: pointer; text-decoration: none; transition: all .22s;
-    display: inline-flex; align-items: center; gap: 7px;
-  }
-  .btn-gold {
-    background: var(--gold); color: var(--deep); border: none;
-    box-shadow: 0 4px 14px rgba(201,168,76,.3);
-  }
-  .btn-gold:hover { background: var(--gold-light); box-shadow: 0 6px 20px rgba(201,168,76,.45); }
-  .btn-outline {
-    background: transparent; border: 1.5px solid var(--gold-dark); color: var(--gold);
-  }
-  .btn-outline:hover { background: rgba(201,168,76,.08); }
+/* ── LAYOUT ── */
+.container{max-width:1280px;margin:0 auto;padding:28px 20px 60px}
 
-  .container { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+/* ── SECTION TITLES ── */
+.sec-head{margin-bottom:20px}
+.sec-label{font-size:.68rem;letter-spacing:.26em;text-transform:uppercase;color:var(--taupe);font-weight:500}
+.sec-title{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:400;color:var(--dark);margin-top:4px}
 
-  /* Stats cards */
-  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 36px; }
-  .stat-card {
-    background: var(--surface); border: 1px solid rgba(201,168,76,.15);
-    border-radius: 12px; padding: 22px 24px;
-    display: flex; flex-direction: column; gap: 6px;
-  }
-  .stat-label { font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-muted); }
-  .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 2.4rem; font-weight: 300; color: var(--gold); }
-  .stat-sub { font-size: .78rem; color: var(--text-muted); }
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:32px}
+.stat-card{
+  background:var(--white);border:1px solid var(--beige);
+  border-radius:12px;padding:20px 18px;
+  display:flex;flex-direction:column;gap:6px;
+  transition:box-shadow .22s,transform .22s;
+}
+.stat-card:hover{box-shadow:0 6px 24px rgba(44,36,22,.1);transform:translateY(-2px)}
+.stat-card.highlight{
+  background:var(--taupe-dark);border-color:var(--taupe-dark);
+}
+.stat-card.highlight .stat-label,.stat-card.highlight .stat-sub{color:rgba(245,239,224,.65)}
+.stat-card.highlight .stat-value{color:var(--cream)}
+.stat-label{font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.stat-value{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:400;color:var(--taupe-dark);line-height:1}
+.stat-sub{font-size:.72rem;color:var(--muted)}
+.stat-icon{font-size:1.4rem;margin-bottom:4px}
+.stat-trend{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:.72rem;font-weight:500;margin-top:4px;
+}
+.trend-up{color:var(--green)}
+.trend-flat{color:var(--muted)}
 
-  /* Table */
-  .table-wrap {
-    background: var(--surface); border: 1px solid rgba(201,168,76,.15);
-    border-radius: 14px; overflow: hidden;
-  }
-  .table-header {
-    padding: 20px 24px; display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid rgba(201,168,76,.12);
-  }
-  .table-header h2 {
-    font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 400;
-    color: var(--gold-light);
-  }
-  .table-scroll { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: .87rem; }
-  thead tr { background: rgba(201,168,76,.08); }
-  th {
-    padding: 13px 16px; text-align: left; font-size: .72rem;
-    letter-spacing: .15em; text-transform: uppercase;
-    color: var(--gold); font-weight: 500; white-space: nowrap;
-    border-bottom: 1px solid rgba(201,168,76,.15);
-  }
-  td {
-    padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,.04);
-    color: var(--text); vertical-align: middle;
-  }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(201,168,76,.04); }
-  .badge {
-    display: inline-block; padding: 3px 10px; border-radius: 50px;
-    font-size: .73rem; font-weight: 500; letter-spacing: .08em;
-  }
-  .badge-green { background: rgba(109,191,138,.15); color: var(--success); border: 1px solid rgba(109,191,138,.3); }
-  .badge-gold { background: rgba(201,168,76,.12); color: var(--gold); border: 1px solid rgba(201,168,76,.25); }
-  .empty-state {
-    text-align: center; padding: 64px 24px;
-    color: var(--text-muted); font-size: .95rem;
-  }
-  .empty-state .big { font-size: 3rem; margin-bottom: 12px; }
+/* ── CHART TABS ── */
+.chart-tabs{display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--beige);margin-bottom:20px;width:fit-content}
+.ctab{
+  padding:8px 20px;font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;
+  font-weight:500;cursor:pointer;background:var(--white);color:var(--muted);
+  transition:all .22s;border:none;font-family:'DM Sans',sans-serif;
+}
+.ctab:not(:last-child){border-right:1px solid var(--beige)}
+.ctab.active{background:var(--taupe-dark);color:var(--white)}
+.ctab:hover:not(.active){background:var(--beige);color:var(--text)}
 
-  /* Back link */
-  .back-link {
-    display: inline-flex; align-items: center; gap: 7px;
-    color: var(--text-muted); font-size: .82rem; text-decoration: none;
-    letter-spacing: .12em; transition: color .2s; margin-bottom: 28px;
-  }
-  .back-link:hover { color: var(--gold); }
+/* ── CHART CARDS ── */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:32px}
+@media(max-width:800px){.charts-row{grid-template-columns:1fr}}
+.chart-card{
+  background:var(--white);border:1px solid var(--beige);
+  border-radius:12px;padding:24px;
+}
+.chart-card h3{
+  font-family:'Playfair Display',serif;font-size:1rem;font-weight:400;
+  color:var(--taupe-dark);margin-bottom:18px;
+}
+.chart-wrap{position:relative;height:220px}
+.chart-panel{display:none}
+.chart-panel.active{display:block}
+
+/* ── DATA TABLE ── */
+.table-card{
+  background:var(--white);border:1px solid var(--beige);
+  border-radius:12px;overflow:hidden;margin-bottom:28px;
+}
+.table-hd{
+  padding:16px 22px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--beige);background:rgba(139,115,85,.04);
+}
+.table-hd h3{font-family:'Playfair Display',serif;font-size:1rem;font-weight:400;color:var(--taupe-dark)}
+.table-hd span{font-size:.75rem;color:var(--muted)}
+.scr{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+thead tr{background:rgba(139,115,85,.06)}
+th{
+  padding:10px 14px;text-align:left;font-size:.66rem;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--taupe);
+  font-weight:500;border-bottom:1px solid var(--beige);white-space:nowrap;
+}
+td{padding:11px 14px;border-bottom:1px solid rgba(139,115,85,.08);vertical-align:middle}
+tr:last-child td{border:none}
+tr:hover td{background:rgba(139,115,85,.03)}
+.badge{display:inline-block;padding:2px 9px;border-radius:50px;font-size:.68rem;font-weight:500}
+.bg{background:rgba(90,138,106,.12);color:var(--green);border:1px solid rgba(90,138,106,.25)}
+.br{background:rgba(192,57,43,.09);color:var(--err)}
+.bt{background:rgba(139,115,85,.1);color:var(--taupe);border:1px solid rgba(139,115,85,.2)}
+.empty-state{text-align:center;padding:48px;color:var(--muted)}
+.stars-gold{color:#C8920A;letter-spacing:.05em}
+
+/* ── MINI DIVIDER ── */
+.divider{width:48px;height:2px;background:var(--accent);margin:6px 0 20px}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <h1>✦ Serenity Spa — Dashboard</h1>
+  <div class="topbar-brand">✦ Salford &amp; Co. — Admin</div>
   <div class="topbar-actions">
+    <button class="dm-btn" id="dmBtn" onclick="toggleDark()">🌙 Dark</button>
     <a href="/" class="btn btn-outline">+ New Booking</a>
     <a href="/export/" class="btn btn-gold">⬇ Export Excel</a>
   </div>
@@ -116,100 +156,326 @@
 
 <div class="container">
 
-  <!-- Stats -->
-  <div class="stats-row">
-    <div class="stat-card">
-      <span class="stat-label">Total Bookings</span>
-      <span class="stat-value">{{ bookings|length }}</span>
-      <span class="stat-sub">All time</span>
+  <!-- ═══ VISITOR ANALYTICS ═══ -->
+  <div class="sec-head" style="margin-top:8px">
+    <div class="sec-label">Site Analytics</div>
+    <div class="sec-title">Visitor <em style="font-family:'Playfair Display',serif;font-style:italic;color:var(--taupe)">Statistics</em></div>
+    <div class="divider"></div>
+  </div>
+
+  <!-- Visit stat cards -->
+  <div class="stats-grid">
+    <div class="stat-card highlight">
+      <div class="stat-icon">👁</div>
+      <div class="stat-label">Today's Visitors</div>
+      <div class="stat-value">{{ visits_today }}</div>
+      <div class="stat-sub">{{ request.META.SERVER_NAME|default:"live" }}</div>
     </div>
     <div class="stat-card">
-      <span class="stat-label">This Month</span>
-      <span class="stat-value" id="monthCount">—</span>
-      <span class="stat-sub">Current month</span>
+      <div class="stat-icon">📅</div>
+      <div class="stat-label">This Month</div>
+      <div class="stat-value">{{ visits_month }}</div>
+      <div class="stat-sub">Monthly visitors</div>
     </div>
     <div class="stat-card">
-      <span class="stat-label">Latest</span>
-      <span class="stat-value" style="font-size:1.1rem;margin-top:8px;">
-        {% if bookings %}{{ bookings.0.full_name|truncatechars:16 }}{% else %}—{% endif %}
-      </span>
-      <span class="stat-sub">Most recent client</span>
+      <div class="stat-icon">📆</div>
+      <div class="stat-label">This Year</div>
+      <div class="stat-value">{{ visits_year }}</div>
+      <div class="stat-sub">Yearly visitors</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">∞</div>
+      <div class="stat-label">All Time</div>
+      <div class="stat-value">{{ visits_total }}</div>
+      <div class="stat-sub">Total page visits</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🗓</div>
+      <div class="stat-label">Bookings Today</div>
+      <div class="stat-value">{{ bookings_today }}</div>
+      <div class="stat-sub">New today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📋</div>
+      <div class="stat-label">Bookings / Month</div>
+      <div class="stat-value">{{ bookings_month }}</div>
+      <div class="stat-sub">This month</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📝</div>
+      <div class="stat-label">Total Bookings</div>
+      <div class="stat-value">{{ bookings|length }}</div>
+      <div class="stat-sub">All time</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-label">Total Reviews</div>
+      <div class="stat-value">{{ reviews|length }}</div>
+      <div class="stat-sub">Client reviews</div>
     </div>
   </div>
 
-  <!-- Table -->
-  <div class="table-wrap">
-    <div class="table-header">
-      <h2>All Client Bookings</h2>
-      <span style="font-size:.8rem;color:var(--text-muted);">{{ bookings|length }} record(s)</span>
+  <!-- Visitor trend charts -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3>Visitor Trend</h3>
+      <!-- Tabs -->
+      <div class="chart-tabs">
+        <button class="ctab active" onclick="switchTab('daily',this)">Daily (30d)</button>
+        <button class="ctab" onclick="switchTab('monthly',this)">Monthly</button>
+        <button class="ctab" onclick="switchTab('yearly',this)">Yearly</button>
+      </div>
+      <div class="chart-panel active" id="panel-daily">
+        <div class="chart-wrap"><canvas id="chartDaily"></canvas></div>
+      </div>
+      <div class="chart-panel" id="panel-monthly">
+        <div class="chart-wrap"><canvas id="chartMonthly"></canvas></div>
+      </div>
+      <div class="chart-panel" id="panel-yearly">
+        <div class="chart-wrap"><canvas id="chartYearly"></canvas></div>
+      </div>
     </div>
 
+    <div class="chart-card">
+      <h3>Bookings by Service</h3>
+      <div class="chart-wrap"><canvas id="chartServices"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ═══ BOOKINGS TABLE ═══ -->
+  <div class="sec-head">
+    <div class="sec-label">Reservations</div>
+    <div class="sec-title">All <em style="font-family:'Playfair Display',serif;font-style:italic;color:var(--taupe)">Bookings</em></div>
+    <div class="divider"></div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-hd">
+      <h3>Client Booking Register</h3>
+      <span>{{ bookings|length }} record(s)</span>
+    </div>
     {% if bookings %}
-    <div class="table-scroll">
+    <div class="scr">
       <table>
         <thead>
           <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Service</th>
-            <th>Duration</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Pressure</th>
-            <th>Consent</th>
-            <th>Booked At</th>
+            <th>#</th><th>Name</th><th>Email</th><th>Phone</th>
+            <th>Service</th><th>Duration</th><th>Date</th><th>Time</th>
+            <th>Pressure</th><th>Consent</th><th>Booked At</th>
           </tr>
         </thead>
         <tbody>
           {% for b in bookings %}
           <tr>
-            <td style="color:var(--text-muted);font-size:.8rem;">{{ forloop.counter }}</td>
-            <td style="font-weight:500;color:var(--gold-light);">{{ b.full_name }}</td>
-            <td style="color:var(--text-muted);">{{ b.email }}</td>
+            <td style="color:var(--muted);font-size:.78rem">{{ forloop.counter }}</td>
+            <td style="font-weight:500;color:var(--taupe-dark)">{{ b.full_name }}</td>
+            <td style="color:var(--muted)">{{ b.email }}</td>
             <td>{{ b.phone }}</td>
-            <td><span class="badge badge-gold">{{ b.get_service_display }}</span></td>
+            <td><span class="badge bt">{{ b.get_service_display }}</span></td>
             <td>{{ b.get_duration_display }}</td>
             <td>{{ b.preferred_date|date:"d M Y" }}</td>
             <td>{{ b.preferred_time|time:"h:i A" }}</td>
-            <td style="text-transform:capitalize;">{{ b.pressure_preference }}</td>
+            <td style="text-transform:capitalize">{{ b.pressure_preference }}</td>
             <td>
-              {% if b.consent_given %}
-              <span class="badge badge-green">✔ Yes</span>
-              {% else %}
-              <span style="color:var(--error);font-size:.8rem;">✘ No</span>
-              {% endif %}
+              {% if b.consent_given %}<span class="badge bg">✔ Yes</span>
+              {% else %}<span class="badge br">✘ No</span>{% endif %}
             </td>
-            <td style="color:var(--text-muted);font-size:.8rem;">{{ b.created_at|date:"d M Y H:i" }}</td>
+            <td style="color:var(--muted);font-size:.76rem">{{ b.created_at|date:"d M Y H:i" }}</td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
     {% else %}
-    <div class="empty-state">
-      <div class="big">🌸</div>
-      <p>No bookings yet. <a href="/" style="color:var(--gold);">Take the first booking →</a></p>
-    </div>
+    <div class="empty-state">🌿 No bookings yet. <a href="/" style="color:var(--taupe)">Take the first booking →</a></div>
     {% endif %}
   </div>
 
-</div>
+  <!-- ═══ REVIEWS TABLE ═══ -->
+  <div class="sec-head">
+    <div class="sec-label">Feedback</div>
+    <div class="sec-title">Client <em style="font-family:'Playfair Display',serif;font-style:italic;color:var(--taupe)">Reviews</em></div>
+    <div class="divider"></div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-hd">
+      <h3>Review Register</h3>
+      <span>{{ reviews|length }} review(s)</span>
+    </div>
+    {% if reviews %}
+    <div class="scr">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Name</th><th>Service</th><th>Rating</th><th>Comment</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          {% for r in reviews %}
+          <tr>
+            <td style="color:var(--muted);font-size:.78rem">{{ forloop.counter }}</td>
+            <td style="font-weight:500;color:var(--taupe-dark)">{{ r.name }}</td>
+            <td><span class="badge bt">{{ r.get_service_display }}</span></td>
+            <td class="stars-gold">
+              {% for i in "12345" %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
+            </td>
+            <td style="color:var(--muted);max-width:320px">{{ r.comment|truncatechars:90 }}</td>
+            <td style="color:var(--muted);font-size:.76rem">{{ r.created_at|date:"d M Y" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">🌸 No reviews yet.</div>
+    {% endif %}
+  </div>
+
+</div><!-- /container -->
 
 <script>
-  // Count bookings this month
-  const rows = document.querySelectorAll('tbody tr');
-  const now = new Date();
-  let count = 0;
-  document.querySelectorAll('tbody tr td:nth-child(11)').forEach(td => {
-    const txt = td.textContent.trim();
-    if(txt){
-      const d = new Date(txt);
-      if(d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear()) count++;
+// ── Dark mode ─────────────────────────────────────────────────────────────
+function toggleDark(){
+  const isDark = document.body.classList.toggle('dark');
+  const btn = document.getElementById('dmBtn');
+  btn.textContent = isDark ? '☀ Light' : '🌙 Dark';
+  localStorage.setItem('salford-admin-dark', isDark ? '1' : '0');
+  updateChartTheme();
+}
+if(localStorage.getItem('salford-admin-dark') === '1'){
+  document.body.classList.add('dark');
+  document.getElementById('dmBtn').textContent = '☀ Light';
+}
+
+// ── Chart data from Django ────────────────────────────────────────────────
+const DAILY_LABELS   = {{ daily_labels|safe }};
+const DAILY_DATA     = {{ daily_data|safe }};
+const MONTHLY_LABELS = {{ monthly_labels|safe }};
+const MONTHLY_DATA   = {{ monthly_data|safe }};
+const YEARLY_LABELS  = {{ yearly_labels|safe }};
+const YEARLY_DATA    = {{ yearly_data|safe }};
+const SVC_LABELS     = {{ svc_labels|safe }};
+const SVC_DATA       = {{ svc_data|safe }};
+
+// ── Shared chart defaults ─────────────────────────────────────────────────
+function getTheme(){
+  const dark = document.body.classList.contains('dark');
+  return {
+    gridColor:  dark ? 'rgba(200,168,120,.1)' : 'rgba(139,115,85,.1)',
+    tickColor:  dark ? '#7A6B5A' : '#9B8B78',
+    lineColor:  '#8B7355',
+    fillColor:  dark ? 'rgba(139,115,85,.15)' : 'rgba(139,115,85,.1)',
+    barColor:   '#8B7355',
+    barHover:   '#5C4A32',
+  };
+}
+
+function lineOpts(labels, data, label){
+  const t = getTheme();
+  return {
+    type: 'line',
+    data: {
+      labels,
+      datasets:[{
+        label,
+        data,
+        borderColor: t.lineColor,
+        backgroundColor: t.fillColor,
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: t.lineColor,
+        tension: 0.35,
+        fill: true,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#2C2416', titleColor:'#E8DDD0', bodyColor:'#C8B89A', borderColor:'#8B7355', borderWidth:1 }},
+      scales:{
+        x:{ grid:{color:t.gridColor}, ticks:{color:t.tickColor, font:{size:10}, maxRotation:45, maxTicksLimit:12}},
+        y:{ grid:{color:t.gridColor}, ticks:{color:t.tickColor, font:{size:10}}, beginAtZero:true},
+      }
     }
+  };
+}
+
+function barOpts(labels, data, label){
+  const t = getTheme();
+  return {
+    type: 'bar',
+    data:{
+      labels,
+      datasets:[{
+        label,
+        data,
+        backgroundColor: t.barColor,
+        hoverBackgroundColor: t.barHover,
+        borderRadius: 5,
+        borderSkipped: false,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#2C2416', titleColor:'#E8DDD0', bodyColor:'#C8B89A', borderColor:'#8B7355', borderWidth:1 }},
+      scales:{
+        x:{ grid:{display:false}, ticks:{color:getTheme().tickColor, font:{size:10}}},
+        y:{ grid:{color:getTheme().gridColor}, ticks:{color:getTheme().tickColor, font:{size:10}}, beginAtZero:true},
+      }
+    }
+  };
+}
+
+// ── Doughnut for services ─────────────────────────────────────────────────
+const PALETTE = ['#8B7355','#C8B89A','#5C4A32','#A08060','#3A2E1E'];
+
+// ── Init charts ───────────────────────────────────────────────────────────
+const chartDaily   = new Chart(document.getElementById('chartDaily'),   lineOpts(DAILY_LABELS, DAILY_DATA, 'Visitors'));
+const chartMonthly = new Chart(document.getElementById('chartMonthly'), lineOpts(MONTHLY_LABELS, MONTHLY_DATA, 'Visitors'));
+const chartYearly  = new Chart(document.getElementById('chartYearly'),  barOpts(YEARLY_LABELS, YEARLY_DATA, 'Visitors'));
+
+const chartSvc = new Chart(document.getElementById('chartServices'), {
+  type: 'doughnut',
+  data:{
+    labels: SVC_LABELS.length ? SVC_LABELS : ['No data'],
+    datasets:[{
+      data: SVC_DATA.length ? SVC_DATA : [1],
+      backgroundColor: PALETTE,
+      hoverBackgroundColor: PALETTE.map(c => c + 'CC'),
+      borderWidth: 0,
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    cutout:'62%',
+    plugins:{
+      legend:{ position:'bottom', labels:{ color:'#9B8B78', font:{size:11}, padding:12, boxWidth:12 }},
+      tooltip:{ backgroundColor:'#2C2416', titleColor:'#E8DDD0', bodyColor:'#C8B89A', borderColor:'#8B7355', borderWidth:1 },
+    }
+  }
+});
+
+// ── Tab switcher ──────────────────────────────────────────────────────────
+function switchTab(name, btn){
+  document.querySelectorAll('.ctab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.chart-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+// ── Re-theme charts on dark toggle ────────────────────────────────────────
+function updateChartTheme(){
+  [chartDaily, chartMonthly, chartYearly].forEach(ch => {
+    const t = getTheme();
+    ch.options.scales.x.grid.color = t.gridColor;
+    ch.options.scales.y.grid.color = t.gridColor;
+    ch.options.scales.x.ticks.color = t.tickColor;
+    ch.options.scales.y.ticks.color = t.tickColor;
+    ch.data.datasets[0].borderColor     = t.lineColor;
+    ch.data.datasets[0].backgroundColor = t.fillColor;
+    ch.update();
   });
-  document.getElementById('monthCount').textContent = count;
+  chartSvc.options.plugins.legend.labels.color = getTheme().tickColor;
+  chartSvc.update();
+}
 </script>
 </body>
 </html>
