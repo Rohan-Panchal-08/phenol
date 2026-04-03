@@ -1,3 +1,4 @@
+import dj_database_url
 import os
 from dotenv import load_dotenv
 
@@ -57,13 +58,13 @@ LOGOUT_REDIRECT_URL = '/login/'
 WSGI_APPLICATION = 'spa_booking.wsgi.application'
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(default='sqlite:///db.sqlite3')
 }
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ── Email (Gmail SMTP) ──────────────────────────────────────────────────────
