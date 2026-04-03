@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Serenity Spa – Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:#C9A84C; --gold-light:#E8D5A3; --gold-dark:#8B6914;
+    --deep:#0D0D1A; --mid:#141428; --surface:#1C1C35; --surface2:#252545;
+    --text:#F0EAD6; --text-muted:#9B9088;
+    --success:#6DBF8A; --error:#E07070;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--deep); color: var(--text); font-family: 'Jost', sans-serif; font-weight: 300; }
+
+  .topbar {
+    background: var(--surface); border-bottom: 1px solid rgba(201,168,76,.2);
+    padding: 18px 32px; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .topbar h1 {
+    font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 400;
+    color: var(--gold-light); letter-spacing: .08em;
+  }
+  .topbar-actions { display: flex; gap: 12px; align-items: center; }
+
+  .btn {
+    padding: 9px 22px; border-radius: 8px; font-family: 'Jost', sans-serif;
+    font-size: .82rem; letter-spacing: .15em; text-transform: uppercase;
+    font-weight: 500; cursor: pointer; text-decoration: none; transition: all .22s;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .btn-gold {
+    background: var(--gold); color: var(--deep); border: none;
+    box-shadow: 0 4px 14px rgba(201,168,76,.3);
+  }
+  .btn-gold:hover { background: var(--gold-light); box-shadow: 0 6px 20px rgba(201,168,76,.45); }
+  .btn-outline {
+    background: transparent; border: 1.5px solid var(--gold-dark); color: var(--gold);
+  }
+  .btn-outline:hover { background: rgba(201,168,76,.08); }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+
+  /* Stats cards */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 36px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid rgba(201,168,76,.15);
+    border-radius: 12px; padding: 22px 24px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .stat-label { font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-muted); }
+  .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 2.4rem; font-weight: 300; color: var(--gold); }
+  .stat-sub { font-size: .78rem; color: var(--text-muted); }
+
+  /* Table */
+  .table-wrap {
+    background: var(--surface); border: 1px solid rgba(201,168,76,.15);
+    border-radius: 14px; overflow: hidden;
+  }
+  .table-header {
+    padding: 20px 24px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid rgba(201,168,76,.12);
+  }
+  .table-header h2 {
+    font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 400;
+    color: var(--gold-light);
+  }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+  thead tr { background: rgba(201,168,76,.08); }
+  th {
+    padding: 13px 16px; text-align: left; font-size: .72rem;
+    letter-spacing: .15em; text-transform: uppercase;
+    color: var(--gold); font-weight: 500; white-space: nowrap;
+    border-bottom: 1px solid rgba(201,168,76,.15);
+  }
+  td {
+    padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,.04);
+    color: var(--text); vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(201,168,76,.04); }
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 50px;
+    font-size: .73rem; font-weight: 500; letter-spacing: .08em;
+  }
+  .badge-green { background: rgba(109,191,138,.15); color: var(--success); border: 1px solid rgba(109,191,138,.3); }
+  .badge-gold { background: rgba(201,168,76,.12); color: var(--gold); border: 1px solid rgba(201,168,76,.25); }
+  .empty-state {
+    text-align: center; padding: 64px 24px;
+    color: var(--text-muted); font-size: .95rem;
+  }
+  .empty-state .big { font-size: 3rem; margin-bottom: 12px; }
+
+  /* Back link */
+  .back-link {
+    display: inline-flex; align-items: center; gap: 7px;
+    color: var(--text-muted); font-size: .82rem; text-decoration: none;
+    letter-spacing: .12em; transition: color .2s; margin-bottom: 28px;
+  }
+  .back-link:hover { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>✦ Serenity Spa — Dashboard</h1>
+  <div class="topbar-actions">
+    <a href="/" class="btn btn-outline">+ New Booking</a>
+    <a href="/export/" class="btn btn-gold">⬇ Export Excel</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="stat-label">Total Bookings</span>
+      <span class="stat-value">{{ bookings|length }}</span>
+      <span class="stat-sub">All time</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">This Month</span>
+      <span class="stat-value" id="monthCount">—</span>
+      <span class="stat-sub">Current month</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Latest</span>
+      <span class="stat-value" style="font-size:1.1rem;margin-top:8px;">
+        {% if bookings %}{{ bookings.0.full_name|truncatechars:16 }}{% else %}—{% endif %}
+      </span>
+      <span class="stat-sub">Most recent client</span>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <div class="table-header">
+      <h2>All Client Bookings</h2>
+      <span style="font-size:.8rem;color:var(--text-muted);">{{ bookings|length }} record(s)</span>
+    </div>
+
+    {% if bookings %}
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Service</th>
+            <th>Duration</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Pressure</th>
+            <th>Consent</th>
+            <th>Booked At</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in bookings %}
+          <tr>
+            <td style="color:var(--text-muted);font-size:.8rem;">{{ forloop.counter }}</td>
+            <td style="font-weight:500;color:var(--gold-light);">{{ b.full_name }}</td>
+            <td style="color:var(--text-muted);">{{ b.email }}</td>
+            <td>{{ b.phone }}</td>
+            <td><span class="badge badge-gold">{{ b.get_service_display }}</span></td>
+            <td>{{ b.get_duration_display }}</td>
+            <td>{{ b.preferred_date|date:"d M Y" }}</td>
+            <td>{{ b.preferred_time|time:"h:i A" }}</td>
+            <td style="text-transform:capitalize;">{{ b.pressure_preference }}</td>
+            <td>
+              {% if b.consent_given %}
+              <span class="badge badge-green">✔ Yes</span>
+              {% else %}
+              <span style="color:var(--error);font-size:.8rem;">✘ No</span>
+              {% endif %}
+            </td>
+            <td style="color:var(--text-muted);font-size:.8rem;">{{ b.created_at|date:"d M Y H:i" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="big">🌸</div>
+      <p>No bookings yet. <a href="/" style="color:var(--gold);">Take the first booking →</a></p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+  // Count bookings this month
+  const rows = document.querySelectorAll('tbody tr');
+  const now = new Date();
+  let count = 0;
+  document.querySelectorAll('tbody tr td:nth-child(11)').forEach(td => {
+    const txt = td.textContent.trim();
+    if(txt){
+      const d = new Date(txt);
+      if(d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear()) count++;
+    }
+  });
+  document.getElementById('monthCount').textContent = count;
+</script>
+</body>
+</html>

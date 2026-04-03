@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Serenity Spa & Wellness – Book Your Experience</title>
+{% load static %}
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:        #C9A84C;
+    --gold-light:  #E8D5A3;
+    --gold-dark:   #8B6914;
+    --deep:        #0D0D1A;
+    --mid:         #141428;
+    --surface:     #1C1C35;
+    --surface2:    #252545;
+    --text:        #F0EAD6;
+    --text-muted:  #9B9088;
+    --accent:      #7B9CCC;
+    --error:       #E07070;
+    --success:     #6DBF8A;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--deep);
+    color: var(--text);
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Background particles ── */
+  #canvas-bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  }
+
+  /* ── Page wrapper ── */
+  .page-wrapper {
+    position: relative; z-index: 1;
+    max-width: 860px; margin: 0 auto;
+    padding: 48px 20px 80px;
+  }
+
+  /* ── Header ── */
+  .site-header {
+    text-align: center; margin-bottom: 56px;
+    animation: fadeDown .8s ease both;
+  }
+  .logo-mark {
+    display: inline-block; width: 64px; height: 64px;
+    margin-bottom: 16px;
+  }
+  .logo-mark svg { width: 100%; height: 100%; }
+  .site-header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 300; letter-spacing: .12em;
+    color: var(--gold-light);
+    line-height: 1.15;
+  }
+  .site-header h1 em { font-style: italic; color: var(--gold); }
+  .tagline {
+    margin-top: 10px;
+    font-size: .85rem; letter-spacing: .25em;
+    text-transform: uppercase; color: var(--text-muted);
+  }
+  .divider {
+    display: flex; align-items: center; gap: 14px;
+    margin: 24px auto 0; max-width: 300px;
+  }
+  .divider span { flex: 1; height: 1px; background: var(--gold-dark); }
+  .divider i { color: var(--gold); font-size: 1rem; line-height: 1; }
+
+  /* ── Progress bar ── */
+  .progress-track {
+    display: flex; gap: 6px; justify-content: center;
+    margin-bottom: 40px;
+    animation: fadeUp .6s .2s ease both;
+  }
+  .step-dot {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    cursor: default;
+  }
+  .step-dot .dot {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1.5px solid var(--gold-dark);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem; color: var(--text-muted);
+    transition: all .35s ease;
+  }
+  .step-dot .dot-label {
+    font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--text-muted); white-space: nowrap;
+    transition: color .35s;
+  }
+  .step-dot.active .dot {
+    background: var(--gold); border-color: var(--gold);
+    color: var(--deep); font-weight: 600;
+    box-shadow: 0 0 16px rgba(201,168,76,.45);
+  }
+  .step-dot.active .dot-label { color: var(--gold); }
+  .step-dot.done .dot {
+    background: var(--surface2); border-color: var(--gold);
+    color: var(--gold);
+  }
+  .step-connector {
+    width: 40px; height: 1px; background: var(--gold-dark);
+    align-self: center; margin-bottom: 22px;
+  }
+
+  /* ── Form card ── */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid rgba(201,168,76,.18);
+    border-radius: 16px;
+    padding: 44px clamp(20px, 5vw, 52px);
+    box-shadow: 0 32px 80px rgba(0,0,0,.55);
+    animation: fadeUp .7s .1s ease both;
+  }
+
+  /* ── Section heading ── */
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.45rem; font-weight: 400;
+    color: var(--gold-light); letter-spacing: .06em;
+    margin-bottom: 6px;
+  }
+  .section-sub {
+    font-size: .8rem; color: var(--text-muted);
+    letter-spacing: .1em; text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  /* ── Grid layout ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px 24px;
+  }
+  .full-width { grid-column: 1 / -1; }
+
+  /* ── Field ── */
+  .field { display: flex; flex-direction: column; gap: 7px; }
+  .field label {
+    font-size: .75rem; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--text-muted); font-weight: 500;
+  }
+  .field label .req { color: var(--gold); margin-left: 2px; }
+
+  .field input,
+  .field select,
+  .field textarea {
+    background: var(--mid);
+    border: 1px solid rgba(201,168,76,.22);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Jost', sans-serif;
+    font-size: .95rem; font-weight: 300;
+    padding: 12px 16px;
+    transition: border-color .25s, box-shadow .25s, background .25s;
+    outline: none;
+    width: 100%;
+  }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201,168,76,.15);
+    background: #191930;
+  }
+  .field input::placeholder,
+  .field textarea::placeholder { color: var(--text-muted); opacity: .6; }
+  .field select option { background: var(--mid); }
+  .field textarea { resize: vertical; min-height: 90px; }
+
+  /* Input with icon */
+  .input-wrap { position: relative; }
+  .input-wrap .icon {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    color: var(--gold-dark); font-size: 1rem; pointer-events: none;
+  }
+  .input-wrap input { padding-left: 38px; }
+
+  /* ── Service cards ── */
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+    gap: 12px; margin-bottom: 4px;
+  }
+  .service-card {
+    background: var(--mid);
+    border: 1.5px solid rgba(201,168,76,.2);
+    border-radius: 10px; padding: 14px 12px;
+    cursor: pointer; transition: all .25s ease;
+    display: flex; flex-direction: column; gap: 6px;
+    position: relative; overflow: hidden;
+  }
+  .service-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(201,168,76,.08), transparent);
+    opacity: 0; transition: opacity .25s;
+  }
+  .service-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+  .service-card:hover::before { opacity: 1; }
+  .service-card.selected {
+    border-color: var(--gold);
+    background: rgba(201,168,76,.12);
+    box-shadow: 0 0 18px rgba(201,168,76,.25);
+  }
+  .service-card.selected::before { opacity: 1; }
+  .service-card input[type="radio"] { display: none; }
+  .svc-icon { font-size: 1.6rem; line-height: 1; }
+  .svc-name {
+    font-size: .82rem; font-weight: 500; color: var(--text);
+    letter-spacing: .04em; line-height: 1.3;
+  }
+  .svc-price {
+    font-size: .72rem; color: var(--gold); font-weight: 400;
+    letter-spacing: .08em;
+  }
+  .check-badge {
+    position: absolute; top: 8px; right: 8px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--gold); display: flex; align-items: center;
+    justify-content: center; opacity: 0; transform: scale(0);
+    transition: all .2s; font-size: .65rem; color: var(--deep);
+  }
+  .service-card.selected .check-badge { opacity: 1; transform: scale(1); }
+
+  /* ── Duration pills ── */
+  .duration-pills {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 4px;
+  }
+  .pill {
+    background: var(--mid);
+    border: 1.5px solid rgba(201,168,76,.22);
+    border-radius: 50px; padding: 9px 20px;
+    cursor: pointer; font-size: .85rem; font-weight: 500;
+    color: var(--text-muted); transition: all .22s;
+    user-select: none;
+  }
+  .pill:hover { border-color: var(--gold); color: var(--text); }
+  .pill.selected {
+    background: var(--gold); border-color: var(--gold);
+    color: var(--deep); font-weight: 600;
+    box-shadow: 0 4px 14px rgba(201,168,76,.35);
+  }
+  .pill input[type="radio"] { display: none; }
+
+  /* ── Pressure slider ── */
+  .pressure-track {
+    display: flex; gap: 0; border-radius: 8px; overflow: hidden;
+    border: 1px solid rgba(201,168,76,.22); margin-bottom: 4px;
+  }
+  .pressure-opt {
+    flex: 1; text-align: center; padding: 11px 4px;
+    font-size: .8rem; letter-spacing: .06em;
+    cursor: pointer; background: var(--mid);
+    color: var(--text-muted); transition: all .22s;
+    user-select: none;
+  }
+  .pressure-opt:not(:last-child) { border-right: 1px solid rgba(201,168,76,.15); }
+  .pressure-opt:hover { background: rgba(201,168,76,.08); color: var(--text); }
+  .pressure-opt.selected { background: var(--gold); color: var(--deep); font-weight: 600; }
+  .pressure-opt input[type="radio"] { display: none; }
+
+  /* ── Consent checkbox ── */
+  .consent-box {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: rgba(201,168,76,.06);
+    border: 1px solid rgba(201,168,76,.2);
+    border-radius: 10px; padding: 18px 20px;
+    cursor: pointer;
+  }
+  .consent-box input[type="checkbox"] { display: none; }
+  .custom-check {
+    width: 22px; height: 22px; flex-shrink: 0;
+    border: 1.5px solid var(--gold-dark); border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .22s; margin-top: 2px;
+  }
+  .custom-check svg { opacity: 0; transform: scale(0); transition: all .18s; }
+  .consent-box:has(input:checked) .custom-check {
+    background: var(--gold); border-color: var(--gold);
+  }
+  .consent-box:has(input:checked) .custom-check svg {
+    opacity: 1; transform: scale(1);
+  }
+  .consent-text { font-size: .88rem; color: var(--text-muted); line-height: 1.6; }
+  .consent-text strong { color: var(--text); }
+
+  /* ── Separator ── */
+  .section-sep {
+    border: none; border-top: 1px solid rgba(201,168,76,.15);
+    margin: 36px 0;
+  }
+
+  /* ── Submit button ── */
+  .submit-btn {
+    width: 100%; padding: 16px 32px;
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-dark));
+    background-size: 200% 100%; background-position: right center;
+    border: none; border-radius: 10px;
+    font-family: 'Jost', sans-serif; font-size: 1rem; font-weight: 600;
+    letter-spacing: .2em; text-transform: uppercase;
+    color: var(--deep); cursor: pointer;
+    transition: background-position .4s ease, transform .2s, box-shadow .3s;
+    margin-top: 32px; position: relative; overflow: hidden;
+  }
+  .submit-btn:hover {
+    background-position: left center;
+    box-shadow: 0 8px 30px rgba(201,168,76,.45);
+    transform: translateY(-1px);
+  }
+  .submit-btn:active { transform: translateY(0); }
+  .submit-btn .btn-shimmer {
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+    transform: translateX(-100%);
+    transition: transform .5s;
+  }
+  .submit-btn:hover .btn-shimmer { transform: translateX(100%); }
+
+  /* ── Success overlay ── */
+  #success-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(13,13,26,.92);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity .4s;
+  }
+  #success-overlay.visible { opacity: 1; pointer-events: all; }
+  .success-card {
+    background: var(--surface);
+    border: 1px solid rgba(201,168,76,.35);
+    border-radius: 20px; padding: 52px 44px;
+    text-align: center; max-width: 420px; width: 90%;
+    transform: scale(.92); transition: transform .4s .05s;
+  }
+  #success-overlay.visible .success-card { transform: scale(1); }
+  .success-icon {
+    width: 72px; height: 72px; margin: 0 auto 22px;
+    border-radius: 50%; background: rgba(109,191,138,.15);
+    border: 2px solid var(--success);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; animation: pulse 2s ease infinite;
+  }
+  .success-card h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem; font-weight: 400;
+    color: var(--gold-light); margin-bottom: 10px;
+  }
+  .success-card p { color: var(--text-muted); font-size: .95rem; line-height: 1.6; }
+  .success-name { color: var(--gold); font-weight: 600; }
+  .success-close {
+    margin-top: 28px; padding: 11px 32px;
+    background: transparent;
+    border: 1.5px solid var(--gold);
+    border-radius: 8px; color: var(--gold);
+    font-family: 'Jost', sans-serif; font-size: .85rem;
+    letter-spacing: .15em; text-transform: uppercase;
+    cursor: pointer; transition: all .22s;
+  }
+  .success-close:hover { background: var(--gold); color: var(--deep); }
+
+  /* ── Notification toast ── */
+  #toast {
+    position: fixed; bottom: 28px; right: 28px; z-index: 200;
+    padding: 14px 22px; border-radius: 10px;
+    font-size: .88rem; font-weight: 500;
+    transform: translateY(20px); opacity: 0;
+    transition: all .3s ease; pointer-events: none;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.error { background: rgba(224,112,112,.15); border: 1px solid var(--error); color: var(--error); }
+  #toast.success { background: rgba(109,191,138,.12); border: 1px solid var(--success); color: var(--success); }
+
+  /* ── Animations ── */
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: none; } }
+  @keyframes fadeUp   { from { opacity: 0; transform: translateY(20px);  } to { opacity: 1; transform: none; } }
+  @keyframes pulse    { 0%,100% { box-shadow: 0 0 0 0 rgba(109,191,138,.3); } 50% { box-shadow: 0 0 0 12px rgba(109,191,138,0); } }
+
+  /* ── Loading spinner on submit ── */
+  .spinner {
+    display: none; width: 20px; height: 20px;
+    border: 2px solid rgba(13,13,26,.4);
+    border-top-color: var(--deep);
+    border-radius: 50%; animation: spin .6s linear infinite;
+    margin: 0 auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .submit-btn.loading .btn-text { display: none; }
+  .submit-btn.loading .spinner { display: block; }
+
+  /* ── Responsive ── */
+  @media(max-width:520px) {
+    .services-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-card { padding: 28px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas-bg"></canvas>
+
+<!-- ── SUCCESS OVERLAY ── -->
+<div id="success-overlay">
+  <div class="success-card">
+    <div class="success-icon">✦</div>
+    <h2>Booking Confirmed</h2>
+    <p>Thank you, <span class="success-name" id="success-name"></span>.<br>
+    Your spa experience has been reserved. We look forward to welcoming you.</p>
+    <button class="success-close" onclick="closeSuccess()">Close</button>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div id="toast"></div>
+
+<!-- ── PAGE ── -->
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="32" cy="32" r="30" stroke="#C9A84C" stroke-width="1.2"/>
+        <path d="M32 8 C32 8 20 20 20 32 C20 44 32 56 32 56 C32 56 44 44 44 32 C44 20 32 8 32 8Z" fill="none" stroke="#C9A84C" stroke-width="1"/>
+        <path d="M8 32 C8 32 20 20 32 20 C44 20 56 32 56 32 C56 32 44 44 32 44 C20 44 8 32 8 32Z" fill="none" stroke="#C9A84C" stroke-width="1"/>
+        <circle cx="32" cy="32" r="4" fill="#C9A84C" opacity=".6"/>
+      </svg>
+    </div>
+    <h1>Serenity <em>Spa</em> &amp; Wellness</h1>
+    <p class="tagline">Book Your Bespoke Experience</p>
+    <div class="divider">
+      <span></span><i>✦</i><span></span>
+    </div>
+  </header>
+
+  <!-- Progress steps -->
+  <div class="progress-track" id="progressTrack">
+    <div class="step-dot active" data-step="1">
+      <div class="dot">1</div>
+      <div class="dot-label">Personal</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-dot" data-step="2">
+      <div class="dot">2</div>
+      <div class="dot-label">Service</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-dot" data-step="3">
+      <div class="dot">3</div>
+      <div class="dot-label">Health</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-dot" data-step="4">
+      <div class="dot">4</div>
+      <div class="dot-label">Confirm</div>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <form class="form-card" id="bookingForm" novalidate>
+    {% csrf_token %}
+
+    <!-- ── STEP 1: Personal Info ── -->
+    <div class="form-step" id="step1">
+      <p class="section-title">Personal Information</p>
+      <p class="section-sub">Tell us a little about yourself</p>
+
+      <div class="form-grid">
+        <div class="field full-width">
+          <label>Full Name <span class="req">*</span></label>
+          <div class="input-wrap">
+            <span class="icon">👤</span>
+            <input type="text" name="full_name" placeholder="Your full name" required autocomplete="name"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Email Address <span class="req">*</span></label>
+          <div class="input-wrap">
+            <span class="icon">✉</span>
+            <input type="email" name="email" placeholder="you@example.com" required/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Phone Number <span class="req">*</span></label>
+          <div class="input-wrap">
+            <span class="icon">📞</span>
+            <input type="tel" name="phone" placeholder="+91 98765 43210" required/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="date" name="date_of_birth"/>
+        </div>
+        <div class="field">
+          <label>Gender</label>
+          <select name="gender">
+            <option value="prefer_not">Prefer not to say</option>
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="text-align:right;margin-top:28px;">
+        <button type="button" class="submit-btn" style="width:auto;padding:13px 36px;" onclick="nextStep(2)">
+          Continue →
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: Service ── -->
+    <div class="form-step" id="step2" style="display:none;">
+      <p class="section-title">Choose Your Service</p>
+      <p class="section-sub">Select a treatment below</p>
+
+      <div class="services-grid" id="servicesGrid">
+        <label class="service-card" onclick="selectService(this, 'swedish_massage')">
+          <input type="radio" name="service" value="swedish_massage"/>
+          <div class="check-badge">✓</div>
+          <span class="svc-icon">🌸</span>
+          <span class="svc-name">Swedish Massage</span>
+          <span class="svc-price">From ₹1,800</span>
+        </label>
+        <label class="service-card" onclick="selectService(this, 'deep_tissue')">
+          <input type="radio" name="service" value="deep_tissue"/>
+          <div class="check-badge">✓</div>
+          <span class="svc-icon">💆</span>
+          <span class="svc-name">Deep Tissue Massage</span>
+          <span class="svc-price">From ₹2,200</span>
+        </label>
+        <label class="service-card" onclick="selectService(this, 'hot_stone')">
+          <input type="radio" name="service" value="hot_stone"/>
+          <div class="check-badge">✓</div>
+          <span class="svc-icon">🪨</span>
+          <span class="svc-name">Hot Stone Therapy</span>
+          <span class="svc-price">From ₹2,800</span>
+        </label>
+        <label class="service-card" onclick="selectService(this, 'aromatherapy')">
+          <input type="radio" name="service" value="aromatherapy"/>
+          <div class="check-badge">✓</div>
+          <span class="svc-icon">🌿</span>
+          <span class="svc-name">Aromatherapy</span>
+          <span class="svc-price">From ₹2,000</span>
+        </label>
+        <label class="service-card" onclick="selectService(this, 'facial')">
+          <input type="radio" name="service" value="facial"/>
+          <div class="check-badge">✓</div>
+          <span class="svc-icon">✨</span>
+          <span class="svc-name">Luxury Facial</span>
+          <span class="svc-price">From ₹1,600</span>
+        </label>
+        <label class="service-card" onclick="selectService(this, 'body_wrap')">
+          <input type="radio" name="service" value="body_wrap"/>
+          <div class="check-badge">✓</div>
+          <span class="svc-icon">🌺</span>
+          <span class="svc-name">Body Wrap</span>
+          <span class="svc-price">From ₹3,200</span>
+        </label>
+        <label class="service-card" onclick="selectService(this, 'foot_reflexology')">
+          <input type="radio" name="service" value="foot_reflexology"/>
+          <div class="check-badge">✓</div>
+          <span class="svc-icon">👣</span>
+          <span class="svc-name">Foot Reflexology</span>
+          <span class="svc-price">From ₹1,200</span>
+        </label>
+        <label class="service-card" onclick="selectService(this, 'couples_massage')">
+          <input type="radio" name="service" value="couples_massage"/>
+          <div class="check-badge">✓</div>
+          <span class="svc-icon">💑</span>
+          <span class="svc-name">Couples Massage</span>
+          <span class="svc-price">From ₹4,500</span>
+        </label>
+        <label class="service-card" onclick="selectService(this, 'prenatal_massage')">
+          <input type="radio" name="service" value="prenatal_massage"/>
+          <div class="check-badge">✓</div>
+          <span class="svc-icon">🤰</span>
+          <span class="svc-name">Prenatal Massage</span>
+          <span class="svc-price">From ₹2,400</span>
+        </label>
+        <label class="service-card" onclick="selectService(this, 'sports_massage')">
+          <input type="radio" name="service" value="sports_massage"/>
+          <div class="check-badge">✓</div>
+          <span class="svc-icon">🏃</span>
+          <span class="svc-name">Sports Massage</span>
+          <span class="svc-price">From ₹2,500</span>
+        </label>
+      </div>
+
+      <hr class="section-sep"/>
+
+      <!-- Duration -->
+      <p class="section-title">Session Duration</p>
+      <p class="section-sub">How long would you like?</p>
+      <div class="duration-pills" id="durationPills">
+        <label class="pill" onclick="selectPill(this)">
+          <input type="radio" name="duration" value="30"/> 30 min
+        </label>
+        <label class="pill selected" onclick="selectPill(this)">
+          <input type="radio" name="duration" value="60" checked/> 60 min
+        </label>
+        <label class="pill" onclick="selectPill(this)">
+          <input type="radio" name="duration" value="90"/> 90 min
+        </label>
+        <label class="pill" onclick="selectPill(this)">
+          <input type="radio" name="duration" value="120"/> 120 min
+        </label>
+      </div>
+
+      <hr class="section-sep"/>
+
+      <!-- Date / Time / Therapist -->
+      <p class="section-title">Schedule</p>
+      <p class="section-sub">Your preferred appointment</p>
+      <div class="form-grid">
+        <div class="field">
+          <label>Preferred Date <span class="req">*</span></label>
+          <input type="date" name="preferred_date" required/>
+        </div>
+        <div class="field">
+          <label>Preferred Time <span class="req">*</span></label>
+          <input type="time" name="preferred_time" required/>
+        </div>
+        <div class="field full-width">
+          <label>Therapist Preference</label>
+          <select name="therapist_preference">
+            <option value="any">No Preference</option>
+            <option value="female">Female Therapist</option>
+            <option value="male">Male Therapist</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;justify-content:space-between;margin-top:28px;">
+        <button type="button" class="submit-btn" style="width:auto;padding:13px 28px;background:var(--surface2);color:var(--gold);background-image:none;" onclick="prevStep(1)">
+          ← Back
+        </button>
+        <button type="button" class="submit-btn" style="width:auto;padding:13px 36px;" onclick="nextStep(3)">
+          Continue →
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: Health ── -->
+    <div class="form-step" id="step3" style="display:none;">
+      <p class="section-title">Health & Wellness</p>
+      <p class="section-sub">Help us personalise your experience</p>
+
+      <div class="form-grid">
+        <div class="field full-width">
+          <label>Health Conditions or Injuries</label>
+          <textarea name="health_conditions" placeholder="e.g. lower back pain, hypertension, recent surgery…"></textarea>
+        </div>
+        <div class="field full-width">
+          <label>Allergies or Sensitivities</label>
+          <textarea name="allergies" placeholder="e.g. nut oils, lavender, latex…"></textarea>
+        </div>
+      </div>
+
+      <hr class="section-sep"/>
+
+      <p class="section-title">Pressure Preference</p>
+      <p class="section-sub">Select your comfort level</p>
+      <div class="pressure-track" id="pressureTrack">
+        <label class="pressure-opt" onclick="selectPressure(this,'light')">
+          <input type="radio" name="pressure_preference" value="light"/> 🕊 Light
+        </label>
+        <label class="pressure-opt selected" onclick="selectPressure(this,'medium')">
+          <input type="radio" name="pressure_preference" value="medium" checked/> ☯ Medium
+        </label>
+        <label class="pressure-opt" onclick="selectPressure(this,'firm')">
+          <input type="radio" name="pressure_preference" value="firm"/> 💪 Firm
+        </label>
+        <label class="pressure-opt" onclick="selectPressure(this,'deep')">
+          <input type="radio" name="pressure_preference" value="deep"/> 🔥 Deep
+        </label>
+      </div>
+
+      <hr class="section-sep"/>
+
+      <div class="field">
+        <label>Special Requests</label>
+        <textarea name="special_requests" placeholder="Anything else we should know to make your visit perfect…" style="min-height:80px;"></textarea>
+      </div>
+
+      <div style="display:flex;gap:12px;justify-content:space-between;margin-top:28px;">
+        <button type="button" class="submit-btn" style="width:auto;padding:13px 28px;background:var(--surface2);color:var(--gold);background-image:none;" onclick="prevStep(2)">
+          ← Back
+        </button>
+        <button type="button" class="submit-btn" style="width:auto;padding:13px 36px;" onclick="nextStep(4)">
+          Continue →
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 4: Confirm ── -->
+    <div class="form-step" id="step4" style="display:none;">
+      <p class="section-title">Consent & Confirmation</p>
+      <p class="section-sub">Almost there — please review and confirm</p>
+
+      <!-- Summary preview -->
+      <div id="bookingSummary" style="
+        background:var(--mid);border:1px solid rgba(201,168,76,.2);
+        border-radius:10px;padding:20px 24px;margin-bottom:28px;
+        font-size:.9rem;line-height:2;
+      "></div>
+
+      <!-- Consent -->
+      <label class="consent-box">
+        <input type="checkbox" name="consent_given" id="consentCheck" required/>
+        <div class="custom-check">
+          <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+            <path d="M1 5L4.5 8.5L11 1.5" stroke="#1A1A2E" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <p class="consent-text">
+          <strong>I consent</strong> to Serenity Spa collecting and using my personal information to process my booking. I confirm that the information provided is accurate and I agree to the spa's terms of service and health waiver.
+        </p>
+      </label>
+
+      <button type="submit" class="submit-btn" id="submitBtn">
+        <span class="btn-text">✦ Confirm My Booking</span>
+        <div class="spinner"></div>
+        <div class="btn-shimmer"></div>
+      </button>
+
+      <div style="display:flex;justify-content:flex-start;margin-top:16px;">
+        <button type="button" class="submit-btn" style="width:auto;padding:11px 24px;background:var(--surface2);color:var(--gold);background-image:none;font-size:.8rem;" onclick="prevStep(3)">
+          ← Edit
+        </button>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<!-- ── SCRIPTS ── -->
+<script>
+// ── Floating particle canvas ──────────────────────────────────────────────
+(function(){
+  const canvas = document.getElementById('canvas-bg');
+  const ctx = canvas.getContext('2d');
+  let w, h, particles = [];
+  const N = 55;
+
+  function resize(){ w = canvas.width = innerWidth; h = canvas.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+
+  class Particle {
+    constructor(){
+      this.x = Math.random()*w; this.y = Math.random()*h;
+      this.r = Math.random()*1.4+.4;
+      this.vx = (Math.random()-.5)*.25; this.vy = (Math.random()-.5)*.25;
+      this.alpha = Math.random()*.35+.05;
+    }
+    update(){
+      this.x += this.vx; this.y += this.vy;
+      if(this.x<0) this.x=w; if(this.x>w) this.x=0;
+      if(this.y<0) this.y=h; if(this.y>h) this.y=0;
+    }
+    draw(){
+      ctx.beginPath();
+      ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(201,168,76,${this.alpha})`;
+      ctx.fill();
+    }
+  }
+
+  for(let i=0;i<N;i++) particles.push(new Particle());
+
+  function loop(){
+    ctx.clearRect(0,0,w,h);
+    // draw faint lines between nearby particles
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<110){
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x,particles[i].y);
+          ctx.lineTo(particles[j].x,particles[j].y);
+          ctx.strokeStyle=`rgba(201,168,76,${.06*(1-dist/110)})`;
+          ctx.lineWidth=.5;
+          ctx.stroke();
+        }
+      }
+      particles[i].update(); particles[i].draw();
+    }
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+// ── Multi-step navigation ──────────────────────────────────────────────────
+let currentStep = 1;
+
+function showStep(n){
+  document.querySelectorAll('.form-step').forEach(s => s.style.display='none');
+  document.getElementById('step'+n).style.display='block';
+  document.querySelectorAll('.step-dot').forEach(dot => {
+    const s = parseInt(dot.dataset.step);
+    dot.classList.remove('active','done');
+    if(s < n) dot.classList.add('done');
+    if(s === n) dot.classList.add('active');
+  });
+  currentStep = n;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function nextStep(n){
+  if(!validateStep(currentStep)) return;
+  if(n===4) buildSummary();
+  showStep(n);
+}
+
+function prevStep(n){ showStep(n); }
+
+function validateStep(step){
+  if(step===1){
+    const name = document.querySelector('[name=full_name]').value.trim();
+    const email = document.querySelector('[name=email]').value.trim();
+    const phone = document.querySelector('[name=phone]').value.trim();
+    if(!name||!email||!phone){ showToast('Please fill in all required fields.','error'); return false; }
+    if(!/\S+@\S+\.\S+/.test(email)){ showToast('Please enter a valid email address.','error'); return false; }
+  }
+  if(step===2){
+    const svc = document.querySelector('[name=service]:checked');
+    const date = document.querySelector('[name=preferred_date]').value;
+    const time = document.querySelector('[name=preferred_time]').value;
+    if(!svc){ showToast('Please select a service.','error'); return false; }
+    if(!date||!time){ showToast('Please choose your preferred date and time.','error'); return false; }
+    // Future date
+    if(new Date(date) < new Date().setHours(0,0,0,0)){
+      showToast('Please select a future date.','error'); return false;
+    }
+  }
+  return true;
+}
+
+// ── Service selection ──────────────────────────────────────────────────────
+function selectService(el, val){
+  document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input').checked = true;
+}
+
+// ── Duration pills ─────────────────────────────────────────────────────────
+function selectPill(el){
+  document.querySelectorAll('#durationPills .pill').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input').checked = true;
+}
+
+// ── Pressure preference ────────────────────────────────────────────────────
+function selectPressure(el, val){
+  document.querySelectorAll('#pressureTrack .pressure-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input').checked = true;
+}
+
+// ── Build booking summary ──────────────────────────────────────────────────
+const svcLabels = {
+  swedish_massage:'Swedish Massage', deep_tissue:'Deep Tissue Massage',
+  hot_stone:'Hot Stone Therapy', aromatherapy:'Aromatherapy Massage',
+  facial:'Luxury Facial', body_wrap:'Body Wrap Treatment',
+  foot_reflexology:'Foot Reflexology', couples_massage:'Couples Massage',
+  prenatal_massage:'Prenatal Massage', sports_massage:'Sports Massage',
+};
+
+function buildSummary(){
+  const get = n => document.querySelector(`[name=${n}]`)?.value || '—';
+  const getChecked = n => document.querySelector(`[name=${n}]:checked`)?.value || '—';
+  const svc = svcLabels[getChecked('service')] || '—';
+  const dur = getChecked('duration');
+  const date = get('preferred_date');
+  const time = get('preferred_time');
+
+  const rows = [
+    ['Name', get('full_name')],
+    ['Email', get('email')],
+    ['Phone', get('phone')],
+    ['Service', svc],
+    ['Duration', dur + ' minutes'],
+    ['Date', date],
+    ['Time', time],
+  ];
+
+  const html = rows.map(([k,v]) => `
+    <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(201,168,76,.1);padding:4px 0;">
+      <span style="color:var(--text-muted);font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;">${k}</span>
+      <span style="color:var(--gold-light);font-weight:500;">${v}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('bookingSummary').innerHTML = html;
+}
+
+// ── Form submission ────────────────────────────────────────────────────────
+document.getElementById('bookingForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const consent = document.getElementById('consentCheck').checked;
+  if(!consent){ showToast('Please provide your consent to continue.','error'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.classList.add('loading');
+
+  const formData = new FormData(this);
+
+  try {
+    const res = await fetch('/', { method:'POST', body: formData });
+    const data = await res.json();
+
+    if(data.status === 'success'){
+      document.getElementById('success-name').textContent = data.name;
+      document.getElementById('success-overlay').classList.add('visible');
+      this.reset();
+      showStep(1);
+      // reset UI selections
+      document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+      document.querySelectorAll('#durationPills .pill').forEach((p,i)=>{ p.classList.toggle('selected',i===1); });
+      document.querySelectorAll('#pressureTrack .pressure-opt').forEach((o,i)=>{ o.classList.toggle('selected',i===1); });
+    } else {
+      showToast(data.message || 'Something went wrong.', 'error');
+    }
+  } catch(err){
+    showToast('Network error. Please try again.','error');
+  } finally {
+    btn.classList.remove('loading');
+  }
+});
+
+function closeSuccess(){
+  document.getElementById('success-overlay').classList.remove('visible');
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function showToast(msg, type='success'){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `show ${type}`;
+  setTimeout(()=>{ t.className=''; }, 3500);
+}
+
+// ── Set min date ───────────────────────────────────────────────────────────
+document.querySelector('[name=preferred_date]').min = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
