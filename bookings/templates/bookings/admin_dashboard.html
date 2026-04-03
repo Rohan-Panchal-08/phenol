@@ -1,3 +1,4 @@
+<h1 style="color:red;">TEST ADMIN PAGE</h1>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -143,6 +144,36 @@ tr:hover td{background:rgba(139,115,85,.03)}
 .divider{width:48px;height:2px;background:var(--accent);margin:6px 0 20px}
 </style>
 </head>
+<div id="postponeModal" style="
+  display:none;
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.5);
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+">
+  <div style="
+    background:var(--white);
+    padding:25px;
+    border-radius:12px;
+    width:300px;
+  ">
+    <h3 style="margin-bottom:10px;">Postpone Booking</h3>
+
+    <form method="POST" id="postponeForm">
+      {% csrf_token %}
+
+      <input type="date" name="new_date" required class="btn" style="width:100%;margin-bottom:10px;">
+      <input type="time" name="new_time" required class="btn" style="width:100%;margin-bottom:10px;">
+
+      <button name="action" value="postpone" class="btn btn-gold" style="width:100%;">Confirm</button>
+    </form>
+
+    <button onclick="closeModal()" style="margin-top:10px;">Cancel</button>
+  </div>
+</div>
 <body>
 
 <div class="topbar">
@@ -258,32 +289,50 @@ tr:hover td{background:rgba(139,115,85,.03)}
     <div class="scr">
       <table>
         <thead>
-          <tr>
-            <th>#</th><th>Name</th><th>Email</th><th>Phone</th>
-            <th>Service</th><th>Duration</th><th>Date</th><th>Time</th>
-            <th>Pressure</th><th>Consent</th><th>Booked At</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for b in bookings %}
-          <tr>
-            <td style="color:var(--muted);font-size:.78rem">{{ forloop.counter }}</td>
-            <td style="font-weight:500;color:var(--taupe-dark)">{{ b.full_name }}</td>
-            <td style="color:var(--muted)">{{ b.email }}</td>
-            <td>{{ b.phone }}</td>
-            <td><span class="badge bt">{{ b.get_service_display }}</span></td>
-            <td>{{ b.get_duration_display }}</td>
-            <td>{{ b.preferred_date|date:"d M Y" }}</td>
-            <td>{{ b.preferred_time|time:"h:i A" }}</td>
-            <td style="text-transform:capitalize">{{ b.pressure_preference }}</td>
-            <td>
-              {% if b.consent_given %}<span class="badge bg">✔ Yes</span>
-              {% else %}<span class="badge br">✘ No</span>{% endif %}
-            </td>
-            <td style="color:var(--muted);font-size:.76rem">{{ b.created_at|date:"d M Y H:i" }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
+  <tr>
+    <th>#</th><th>Name</th><th>Email</th><th>Phone</th>
+    <th>Service</th><th>Duration</th><th>Date</th><th>Time</th>
+    <th>Status</th><th>Actions</th>
+  </tr>
+</thead>
+
+<tbody>
+  {% for b in bookings %}
+  <tr>
+    <td>{{ forloop.counter }}</td>
+    <td style="font-weight:500;color:var(--taupe-dark)">{{ b.full_name }}</td>
+    <td style="color:var(--muted)">{{ b.email }}</td>
+    <td>{{ b.phone }}</td>
+
+    <td><span class="badge bt">{{ b.get_service_display }}</span></td>
+    <td>{{ b.get_duration_display }}</td>
+    <td>{{ b.preferred_date|date:"d M Y" }}</td>
+    <td>{{ b.preferred_time|time:"h:i A" }}</td>
+
+    <!-- STATUS -->
+    <td>
+      {% if b.status == "confirmed" %}
+        <span class="badge bg">Confirmed</span>
+      {% elif b.status == "cancelled" %}
+        <span class="badge br">Cancelled</span>
+      {% else %}
+        <span class="badge bt">Postponed</span>
+      {% endif %}
+    </td>
+
+    <!-- ACTIONS -->
+    <td>
+      <form method="POST" action="/update-booking/{{ b.id }}/" style="display:flex; gap:6px;">
+        {% csrf_token %}
+        <button name="action" value="cancel" class="btn btn-outline">Cancel</button>
+        <button type="button" onclick="openPostpone('{{ b.id }}')" class="btn btn-gold">
+          Postpone
+        </button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</tbody>
       </table>
     </div>
     {% else %}
@@ -307,24 +356,20 @@ tr:hover td{background:rgba(139,115,85,.03)}
     <div class="scr">
       <table>
         <thead>
-          <tr><th>#</th><th>Name</th><th>Service</th><th>Rating</th><th>Comment</th><th>Date</th></tr>
+          <tr><th>#</th><th>Name</th><th>Rating</th><th>Comment</th><th>Date</th></tr>
         </thead>
         <tbody>
           {% for r in reviews %}
           <tr>
-            <td style="color:var(--muted);font-size:.78rem">{{ forloop.counter }}</td>
-            <td style="font-weight:500;color:var(--taupe-dark)">{{ r.name }}</td>
-            <td><span class="badge bt">{{ r.get_service_display }}</span></td>
-            <td class="stars-gold">
-              {% for i in "12345" %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
-            </td>
-            <td style="color:var(--muted);max-width:320px">{{ r.comment|truncatechars:90 }}</td>
-            <td style="color:var(--muted);font-size:.76rem">{{ r.created_at|date:"d M Y" }}</td>
+            <td>{{ forloop.counter }}</td>
+            <td style="font-weight:500;color:var(--taupe-dark)">{{ r.full_name }}</td>
+            <td><span class="stars-gold">{% for i in "12345"|slice:":r.rating" %}★{% endfor %}</span></td>
+            <td>{{ r.comment|default:"—" }}</td>
+            <td>{{ r.created_at|date:"d M Y" }}</td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
-    </div>
     {% else %}
     <div class="empty-state">🌸 No reviews yet.</div>
     {% endif %}
@@ -475,6 +520,19 @@ function updateChartTheme(){
   });
   chartSvc.options.plugins.legend.labels.color = getTheme().tickColor;
   chartSvc.update();
+}
+</script>
+<script>
+function openPostpone(id){
+  const modal = document.getElementById("postponeModal");
+  const form = document.getElementById("postponeForm");
+
+  form.action = `/update-booking/${id}/`;
+  modal.style.display = "flex";
+}
+
+function closeModal(){
+  document.getElementById("postponeModal").style.display = "none";
 }
 </script>
 </body>

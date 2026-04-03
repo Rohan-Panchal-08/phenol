@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
+from django.utils.html import strip_tags
 from django.conf import settings
 from django.utils import timezone
 from .models import Booking, Review, SiteVisit, SERVICE_CHOICES
@@ -14,6 +16,10 @@ from django.db.models import Count
 from django.db.models.functions import TruncDate, TruncMonth, TruncYear
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect
+from django.db import IntegrityError
+from django.core.mail import send_mail
+from django.conf import settings
 from django.http import HttpResponse
 from django.db import IntegrityError
 
@@ -39,10 +45,87 @@ print("🔥 EMAIL FUNCTION TRIGGERED")
 # ── label maps ────────────────────────────────────────────────────────────────
 SVC_MAP      = dict(SERVICE_CHOICES)
 DUR_MAP      = {'30':'30 min','60':'60 min','90':'90 min','120':'120 min'}
-GENDER_MAP   = {'male':'Male','female':'Female','prefer_not':'Prefer not to say'}
+# GENDER_MAP   = {'male':'Male','female':'Female','prefer_not':'Prefer not to say'}
 THERAPY_MAP  = {'any':'No preference','female':'Female therapist','male':'Male therapist'}
 PRESSURE_MAP = {'light':'Light','medium':'Medium','firm':'Firm','deep':'Deep'}
 
+
+
+def update_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        # ✅ CANCEL
+        if action == "cancel":
+            booking.status = "cancelled"
+            booking.save()
+
+            html_content = f"""
+            <div style="font-family:DM Sans; background:#F5EFE0; padding:20px;">
+              <div style="max-width:500px;margin:auto;background:#FFFDF8;padding:25px;border-radius:12px;">
+                <h2 style="color:#5C4A32;">Salford & Co.</h2>
+
+                <p>Hi <b>{booking.full_name}</b>,</p>
+
+                <p>Your booking has been 
+                <span style="color:#C0392B;"><b>cancelled</b></span>.</p>
+
+                <div style="margin-top:15px;background:#FDEDEC;padding:12px;border-radius:8px;">
+                  <b>Date:</b> {booking.preferred_date}<br>
+                  <b>Time:</b> {booking.preferred_time}
+                </div>
+
+                <p style="margin-top:15px;">We apologize for any inconvenience.</p>
+              </div>
+            </div>
+            """
+
+        # ✅ POSTPONE
+        elif action == "postpone":
+            new_date = request.POST.get("new_date")
+            new_time = request.POST.get("new_time")
+
+            booking.preferred_date = new_date
+            booking.preferred_time = new_time
+            booking.status = "postponed"
+            booking.save()
+
+            html_content = f"""
+            <div style="font-family:DM Sans; background:#F5EFE0; padding:20px;">
+              <div style="max-width:500px;margin:auto;background:#FFFDF8;padding:25px;border-radius:12px;">
+                <h2 style="color:#5C4A32;">Salford & Co.</h2>
+
+                <p>Hi <b>{booking.full_name}</b>,</p>
+
+                <p>Your booking has been 
+                <span style="color:#8B7355;"><b>rescheduled</b></span>.</p>
+
+                <div style="margin-top:15px;background:#EDE3CF;padding:12px;border-radius:8px;">
+                  <b>New Date:</b> {new_date}<br>
+                  <b>New Time:</b> {new_time}
+                </div>
+
+                <p style="margin-top:15px;">We look forward to serving you ✨</p>
+              </div>
+            </div>
+            """
+
+        # ✅ SEND EMAIL
+        subject = "Booking Update - Salford & Co."
+        text_content = strip_tags(html_content)
+
+        email = EmailMultiAlternatives(
+            subject,
+            text_content,
+            settings.EMAIL_HOST_USER,
+            [booking.email],
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send()
+
+    return redirect('/dashboard/')
 
 def _get_client_ip(request):
     x_forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -62,17 +145,28 @@ def send_booking_email(booking):
     date_ = booking.preferred_date.strftime('%d %B %Y')
     time_ = booking.preferred_time.strftime('%I:%M %p')
 
-    # ───── OWNER EMAIL (HTML) ─────
+    # ───── OWNER EMAIL (PREMIUM) ─────
     owner_html = f"""
-    <h2>🧾 New Spa Booking</h2>
-    <p><strong>Name:</strong> {booking.full_name}</p>
-    <p><strong>Email:</strong> {booking.email}</p>
-    <p><strong>Phone:</strong> {booking.phone}</p>
-    <hr>
-    <p><strong>Service:</strong> {svc}</p>
-    <p><strong>Duration:</strong> {dur}</p>
-    <p><strong>Date:</strong> {date_}</p>
-    <p><strong>Time:</strong> {time_}</p>
+    <div style="font-family:DM Sans; background:#F5EFE0; padding:20px;">
+      <div style="background:#FFFDF8; padding:25px; border-radius:12px;">
+        
+        <h2 style="color:#5C4A32;">🧾 New Booking Received</h2>
+
+        <p><b>Name:</b> {booking.full_name}</p>
+        <p><b>Email:</b> {booking.email}</p>
+        <p><b>Phone:</b> {booking.phone}</p>
+
+        <hr>
+
+        <div style="background:#EDE3CF;padding:12px;border-radius:8px;">
+          <b>Service:</b> {svc}<br>
+          <b>Duration:</b> {dur}<br>
+          <b>Date:</b> {date_}<br>
+          <b>Time:</b> {time_}
+        </div>
+
+      </div>
+    </div>
     """
 
     msg = EmailMultiAlternatives(
@@ -84,27 +178,35 @@ def send_booking_email(booking):
     msg.attach_alternative(owner_html, "text/html")
     msg.send()
 
-    print("📤 Owner email sent")
-
-    # ───── CLIENT EMAIL (HTML BEAUTIFUL) ─────
+    # ───── CLIENT EMAIL (PREMIUM UI) ─────
     client_html = f"""
-    <div style="font-family:Arial;padding:20px">
-        <h2 style="color:#8B7355;">Salford & Co. Spa</h2>
-        <p>Dear <strong>{booking.full_name}</strong>,</p>
+    <div style="font-family:DM Sans; background:#F5EFE0; padding:20px;">
+      <div style="max-width:500px;margin:auto;background:#FFFDF8;padding:25px;border-radius:12px;">
+        
+        <h2 style="font-family:Playfair Display;color:#5C4A32;">
+          Salford & Co.
+        </h2>
 
-        <p>Your booking is <b>confirmed</b> 💆‍♀️</p>
+        <p>Hi <b>{booking.full_name}</b>,</p>
 
-        <div style="background:#F5EFE0;padding:15px;border-radius:8px">
-            <p><b>Service:</b> {svc}</p>
-            <p><b>Date:</b> {date_}</p>
-            <p><b>Time:</b> {time_}</p>
+        <p>Your booking has been 
+        <span style="color:#5A8A6A;"><b>confirmed</b></span> ✨</p>
+
+        <div style="margin-top:15px;background:#EDE3CF;padding:12px;border-radius:8px;">
+          <b>Service:</b> {svc}<br>
+          <b>Date:</b> {date_}<br>
+          <b>Time:</b> {time_}
         </div>
 
-        <p style="margin-top:15px">
-            We look forward to relaxing you 🌿
+        <p style="margin-top:15px;">
+          We look forward to giving you a relaxing experience 🌿
         </p>
 
-        <p style="color:#8B7355;">— Salford Spa</p>
+        <p style="font-size:12px;color:#9B8B78;">
+          Salford & Co. • Luxury Wellness Experience
+        </p>
+
+      </div>
     </div>
     """
 
@@ -116,8 +218,6 @@ def send_booking_email(booking):
     )
     msg2.attach_alternative(client_html, "text/html")
     msg2.send()
-
-    print("📤 Client email sent")
 
 # ── Main booking page ─────────────────────────────────────────────────────────
 from django.db import IntegrityError
@@ -162,17 +262,26 @@ def booking_form(request):
 
             # 🚫 STEP 2: DB-safe create
             try:
+                if data.get('client_type') == 'couple':
+                    if not data.get('partner_name'):
+                        return JsonResponse({
+                            'status': 'error',
+                            'message': 'Partner name is required for couple booking.'
+                        }, status=400)
                 booking = Booking.objects.create(
                     full_name=data.get('full_name','').strip(),
                     email=data.get('email','').strip(),
                     phone=data.get('phone','').strip(),
                     date_of_birth=parsed_dob,
-                    gender=data.get('gender','prefer_not'),
+                    partner_name=data.get('partner_name') or None,
+                    partner_age=data.get('partner_age') or None,
+                    partner_gender=data.get('partner_gender') or None,
+                    # gender=data.get('gender','prefer_not'),
                     service=data.get('service','foot_massage'),
                     duration=data.get('duration','60'),
                     preferred_date=parsed_date,
                     preferred_time=parsed_time,
-                    therapist_preference=data.get('therapist_preference','any'),
+                    # therapist_preference=data.get('therapist_preference','any'),
                     health_conditions=data.get('health_conditions','').strip() or None,
                     allergies=data.get('allergies','').strip() or None,
                     pressure_preference=data.get('pressure_preference','medium'),
@@ -365,7 +474,7 @@ def export_excel(request):
     ws.row_dimensions[2].height = 18
     ws.row_dimensions[3].height = 8
 
-    headers = ["#","Full Name","Email","Phone","Gender","Service","Duration",
+    headers = ["#","Full Name","Email","Phone","Service","Duration",
                "Date","Time","Therapist","Health Cond.","Allergies",
                "Pressure","Special Requests","Consent","Booked At"]
     widths  = [4,20,26,15,12,20,12,13,11,16,22,18,12,26,9,20]
@@ -379,12 +488,12 @@ def export_excel(request):
         row = ri+4; bg = BEIGE if ri%2==1 else ALT
         vals = [
             ri, b.full_name, b.email, b.phone,
-            GENDER_MAP.get(b.gender,b.gender),
+            b.client_type,
             SVC_MAP.get(b.service,b.service),
             DUR_MAP.get(b.duration,b.duration),
             b.preferred_date.strftime('%d/%m/%Y') if b.preferred_date else '—',
             b.preferred_time.strftime('%I:%M %p')  if b.preferred_time else '—',
-            THERAPY_MAP.get(b.therapist_preference,b.therapist_preference),
+            # THERAPY_MAP.get(b.therapist_preference,b.therapist_preference),
             b.health_conditions or '—', b.allergies or '—',
             PRESSURE_MAP.get(b.pressure_preference,b.pressure_preference),
             b.special_requests or '—',
