@@ -330,7 +330,7 @@ def submit_review(request):
 # ── Admin dashboard with analytics ───────────────────────────────────────────
 @login_required(login_url='/login/')
 def admin_dashboard(request):
-    if request.META.get('REMOTE_ADDR') != '10.118.221.43':
+    if request.META.get('REMOTE_ADDR') != '192.168.1.53':
         return HttpResponse("Unauthorized", status=403)
     bookings = Booking.objects.all().order_by('-created_at')
     reviews  = Review.objects.all().order_by('-created_at')
@@ -463,7 +463,7 @@ def export_excel(request):
 
     ws.merge_cells('A2:P2')
     s = ws['A2']
-    s.value     = (f"Delhi NCR  •  8796044169  •  rohanpanchal080@gmail.com  •  "
+    s.value     = (f"Delhi NCR  •  8796044169  •  rrony231688@gmail.com  •  "
                    f"Generated {datetime.now().strftime('%d %B %Y, %I:%M %p')}")
     s.font      = Font(name='Calibri', size=9, italic=True, color=ACCENT)
     s.fill      = PatternFill("solid", fgColor="3A2E1E")
