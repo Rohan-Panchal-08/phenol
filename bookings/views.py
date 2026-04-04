@@ -330,7 +330,7 @@ def submit_review(request):
 # ── Admin dashboard with analytics ───────────────────────────────────────────
 @login_required(login_url='/login/')
 def admin_dashboard(request):
-    if request.META.get('REMOTE_ADDR') != '192.168.1.53':
+    if request.META.get('REMOTE_ADDR') != '100.85.111.117' or '192.168.0.110 ':
         return HttpResponse("Unauthorized", status=403)
     bookings = Booking.objects.all().order_by('-created_at')
     reviews  = Review.objects.all().order_by('-created_at')
